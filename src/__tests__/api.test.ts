@@ -35,17 +35,20 @@ jest.mock("../services/ai.service", () => ({
 describe("Postly API Core Tests", () => {
   let testUserToken = "";
   const testEmail = `testuser_${Date.now()}@example.com`;
+  const registerEmail = `register_${Date.now()}@example.com`; // <-- New unique email for the first test
 
   afterAll(async () => {
-    // Clean up the DB integration test user
-    await prisma.user.deleteMany({ where: { email: testEmail } });
+    // Clean up both test users from the database
+    await prisma.user.deleteMany({
+      where: { email: { in: [testEmail, registerEmail] } },
+    });
     await prisma.$disconnect();
   });
 
   // 1. Integration Test hitting the DB (Auth Registration)
   it("should register a new user and save to database", async () => {
     const res = await request(app).post("/api/auth/register").send({
-      email: testEmail,
+      email: registerEmail, // <-- Use the unique email here
       password: "securepassword123",
       name: "Test User",
     });
@@ -53,6 +56,8 @@ describe("Postly API Core Tests", () => {
     expect(res.statusCode).toEqual(201);
     expect(res.body).toHaveProperty("userId");
   });
+
+  // ... keep the rest of the file exactly the same
 
   // Login to get a token for the rest of the tests
   beforeAll(async () => {
