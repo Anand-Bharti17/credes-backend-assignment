@@ -139,8 +139,7 @@ export const getPostById = async (
 ): Promise<void> => {
   try {
     const userId = (req as any).user.id;
-    const { id } = req.params;
-
+    const id = req.params.id as string;
     const post = await prisma.post.findFirst({
       where: { id, user_id: userId },
       include: { platforms: true },
