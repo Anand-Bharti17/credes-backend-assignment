@@ -6,6 +6,8 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import contentRoutes from "./routes/content.routes";
+import postRoutes from './routes/post.routes';
+import './services/queue.service'; // This initializes the BullMQ worker!
 
 dotenv.config();
 
@@ -21,6 +23,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/content", contentRoutes);
+app.use("/api/posts", postRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
