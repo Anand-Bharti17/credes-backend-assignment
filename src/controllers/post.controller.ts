@@ -82,29 +82,79 @@ export const publishPost = async (
   }
 };
 
+
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user.id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
+    const status = req.query.status as string;
+    const platform = req.query.platform as string;
+    const startDate = req.query.start_date as string;
+    const endDate = req.query.end_date as string;
+
     const skip = (page - 1) * limit;
+
+    // Build dynamic where clause for filtering
+    const whereClause: any = { user_id: userId };
+
+    if (status) whereClause.status = status.toUpperCase();
+    if (startDate && endDate) {
+      whereClause.created_at = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    }
+    if (platform) {
+      whereClause.platforms = { some: { platform: platform.toLowerCase() } };
+    }
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
-        where: { user_id: userId },
+        where: whereClause,
         include: { platforms: true },
         skip,
         take: limit,
         orderBy: { created_at: "desc" },
       }),
-      prisma.post.count({ where: { user_id: userId } }),
+      prisma.post.count({ where: whereClause }),
     ]);
 
+    // Strict Response Envelope
     res.json({
       data: posts,
       meta: { total, page, limit },
+      error: null,
     });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch posts" });
+    res
+      .status(500)
+      .json({ data: null, meta: null, error: "Failed to fetch posts" });
+  }
+};
+
+export const getPostById = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = (req as any).user.id;
+    const { id } = req.params;
+
+    const post = await prisma.post.findFirst({
+      where: { id, user_id: userId },
+      include: { platforms: true },
+    });
+
+    if (!post) {
+      res.status(404).json({ data: null, meta: null, error: "Post not found" });
+      return;
+    }
+
+    res.json({ data: post, meta: null, error: null });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ data: null, meta: null, error: "Failed to fetch post details" });
   }
 };

@@ -10,6 +10,7 @@ import postRoutes from './routes/post.routes';
 import './services/queue.service'; // This initializes the BullMQ worker!
 import botRoutes from "./routes/bot.routes";
 import "./bot/telegram"; // Ensure bot is initialized
+import dashboardRoutes from "./routes/dashboard.routes";
 
 dotenv.config();
 
@@ -27,6 +28,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/content", contentRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/bot", botRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+
 
 // Health check
 app.get("/health", (req, res) => {
