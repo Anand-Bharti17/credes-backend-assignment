@@ -5,6 +5,7 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
+import contentRoutes from "./routes/content.routes";
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/content", contentRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
@@ -28,4 +31,3 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
-app.use("/api/user", userRoutes);
