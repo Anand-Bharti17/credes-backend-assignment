@@ -3,15 +3,28 @@ import request from "supertest";
 import app from "../index";
 import prisma from "../utils/prisma";
 
-// Mock BullMQ so we don't need Redis running for unit tests
+// 1. Mock ioredis to prevent real connections from hanging the test runner
+jest.mock("ioredis", () => {
+  return jest.fn().mockImplementation(() => ({
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue("OK"),
+    del: jest.fn().mockResolvedValue(1),
+    quit: jest.fn().mockResolvedValue("OK"),
+    on: jest.fn(),
+  }));
+});
+
+// 2. Mock BullMQ with the .on() method included for the Worker
 jest.mock("bullmq", () => ({
   Queue: jest.fn().mockImplementation(() => ({
     add: jest.fn().mockResolvedValue({ id: "mock-job-id" }),
   })),
-  Worker: jest.fn(),
+  Worker: jest.fn().mockImplementation(() => ({
+    on: jest.fn(), // <-- This fixes the TypeError!
+  })),
 }));
 
-// Mock the AI service to prevent real API calls and burning tokens
+// 3. Mock the AI service
 jest.mock("../services/ai.service", () => ({
   generateContent: jest.fn().mockResolvedValue({
     generated: { twitter: { content: "Mock tweet" } },
@@ -19,7 +32,6 @@ jest.mock("../services/ai.service", () => ({
     tokens_used: 100,
   }),
 }));
-
 describe("Postly API Core Tests", () => {
   let testUserToken = "";
   const testEmail = `testuser_${Date.now()}@example.com`;
