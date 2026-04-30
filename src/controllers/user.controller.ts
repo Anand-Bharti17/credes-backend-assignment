@@ -122,8 +122,7 @@ export const disconnectSocialAccount = async (
 ): Promise<void> => {
   try {
     const userId = (req as any).user.id;
-    const accountId = req.params.id;
-
+    const accountId = req.params.id as string;
     await prisma.socialAccount.deleteMany({
       where: { id: accountId, user_id: userId }, // Ensure user owns the account
     });
